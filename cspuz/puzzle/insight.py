@@ -23,6 +23,9 @@ def solve_insight(height, width, problem, problem_title):
         for x in range(width):
             if (problem[y][x] in '+-|s23456789'):
                 n_regions += 1
+            if (problem[y][x] == 'O'):
+                n_regions += 0.5
+    n_regions = int(round(n_regions))
 
     # preprocess
     region_property = []
@@ -32,11 +35,58 @@ def solve_insight(height, width, problem, problem_title):
     region_ids = solver.int_array((height, width), 0, n_regions - 1)
     is_problem = solver.bool_array((height, width))
     k_symbol_region = solver.int_var(0, n_regions - 1)
+
+    def add_equality_constraint(region_id_a, region_id_b, is_equal, mappings_set):
+        mapping_conditions = []
+        for mapping in mappings_set:
+            mapping_condition = []
+            mapped_source = set()
+            mapped_target = set()
+            for ((x1, y1), (x2, y2)) in mapping:
+                mapped_source.add((x1, y1))
+                mapped_target.add((x2, y2))
+                mapping_condition.append((region_ids[y1][x1] == region_id_a) == (region_ids[y2][x2] == region_id_b))
+            for (x1, y1) in cells_xy:
+                if ((x1, y1) not in mapped_source):
+                    mapping_condition.append(~(region_ids[y1][x1] == region_id_a))
+            for (x2, y2) in cells_xy:
+                if ((x2, y2) not in mapped_target):
+                    mapping_condition.append(~(region_ids[y2][x2] == region_id_b))
+            mapping_conditions.append(fold_and(mapping_condition))
+        if (is_equal):
+            solver.ensure(fold_or(mapping_conditions))
+        else:
+            for mapping_condition in mapping_conditions:
+                solver.ensure(~mapping_condition)
+    def node_degree(x, y, degree, region_id=-1):
+        neighbor_conditions = []
+        for dir in range(4):
+            xp = x + DIRX[dir]
+            yp = y + DIRY[dir]
+            if (xp, yp) in cells_xy_dict:
+                if (region_id == -1):
+                    neighbor_conditions.append(region_ids[yp][xp] == region_ids[y][x])
+                else:
+                    neighbor_conditions.append(region_ids[yp][xp] == region_id)
+        if (region_id == -1):
+            return count_true(neighbor_conditions) == degree
+        else:
+            return (region_ids[y][x] == region_id) & (count_true(neighbor_conditions) == degree)
+    def count_degree(degree, region_id, cond=None):
+        node_degree_conditions = []
+        for (x, y) in cells_xy:
+            if (cond is None):
+                node_degree_conditions.append(node_degree(x, y, degree, region_id))
+            else:
+                node_degree_conditions.append(cond[y][x] & node_degree(x, y, degree, region_id))
+        return count_true(node_degree_conditions)
+
     for num in problem_title:
         ref_region_id = len(region_property)
         region_property.append(['EQUAL', -1])
         for i in range(1, num):
             region_property.append(['EQUAL', ref_region_id])
+    segment_pairing = False
     for y in range(height):
         for x in range(width):
             if (problem[y][x] == '.'):
@@ -53,6 +103,13 @@ def solve_insight(height, width, problem, problem_title):
                 elif (problem[y][x] in '23456789'):
                     solver.ensure(region_ids[y][x] == len(region_property))
                     region_property.append(['TREE', ord(problem[y][x]) - ord('0')])
+                elif (problem[y][x] == 'O'):
+                    if (segment_pairing):
+                        segment_pairing = False
+                    else:
+                        segment_pairing = True
+                        region_property.append(['SEGMENT'])
+
     assert(len(region_property) == n_regions)
     # print(region_property)
     for region_id in range(n_regions):
@@ -97,44 +154,6 @@ def solve_insight(height, width, problem, problem_title):
                                     if (current_mapping not in self_mappings[flip_y][flip_x]):
                                         self_mappings[flip_y][flip_x].add(current_mapping)
                                         # print('self', flip_x, flip_y, current_mapping)
-    def add_equality_constraint(region_id_a, region_id_b, is_equal, mappings_set):
-        mapping_conditions = []
-        for mapping in mappings_set:
-            mapping_condition = []
-            mapped_source = set()
-            mapped_target = set()
-            for ((x1, y1), (x2, y2)) in mapping:
-                mapped_source.add((x1, y1))
-                mapped_target.add((x2, y2))
-                mapping_condition.append((region_ids[y1][x1] == region_id_a) == (region_ids[y2][x2] == region_id_b))
-            for (x1, y1) in cells_xy:
-                if ((x1, y1) not in mapped_source):
-                    mapping_condition.append(~(region_ids[y1][x1] == region_id_a))
-            for (x2, y2) in cells_xy:
-                if ((x2, y2) not in mapped_target):
-                    mapping_condition.append(~(region_ids[y2][x2] == region_id_b))
-            mapping_conditions.append(fold_and(mapping_condition))
-        if (is_equal):
-            solver.ensure(fold_or(mapping_conditions))
-        else:
-            for mapping_condition in mapping_conditions:
-                solver.ensure(~mapping_condition)
-    def node_degree(x, y, degree, region_id):
-        neighbor_conditions = []
-        for dir in range(4):
-            xp = x + DIRX[dir]
-            yp = y + DIRY[dir]
-            if (xp, yp) in cells_xy_dict:
-                neighbor_conditions.append(region_ids[yp][xp] == region_id)
-        return (region_ids[y][x] == region_id).then(count_true(neighbor_conditions) == degree)
-    def count_degree(degree, region_id, cond=None):
-        node_degree_conditions = []
-        for (x, y) in cells_xy:
-            if (cond is None):
-                node_degree_conditions.append(node_degree(x, y, degree, region_id))
-            else:
-                node_degree_conditions.append(cond[y][x].then(node_degree(x, y, degree, region_id)))
-        return count_true(node_degree_conditions)
     for region_id in range(n_regions):
         if (region_property[region_id][0] == 'EQUAL'):
             val = region_property[region_id][1]
@@ -166,6 +185,16 @@ def solve_insight(height, width, problem, problem_title):
             solver.ensure(count_degree(1, region_id) == val)
             deg_4 = count_degree(4, region_id)
             solver.ensure(count_degree(3, region_id) + deg_4 + deg_4 == val - 2)
+        elif (region_property[region_id][0] == 'SEGMENT'):
+            for (x, y) in cells_xy:
+                if (problem[y][x] != 'O'):
+                    solver.ensure((region_ids[y][x] == region_id).then(node_degree(x, y, 2, region_id)))
+    for (x, y) in cells_xy:
+        if (problem[y][x] == 'O'):
+            cond = []
+            for region_id in range(n_regions):
+                cond.append((region_ids[y][x] == region_id) & node_degree(x, y, 1, region_id))
+            solver.ensure(fold_or(cond))
     is_sat = solver.find_answer()
     return is_sat, region_ids
 
@@ -175,11 +204,11 @@ if __name__ == '__main__':
     width = 6
     problem_title = [3]
     problem = [
-        'sooooo',
+        'Oooooo',
         'oooooo',
         'oooooo',
         'oooooo',
-        'oooooo',
+        'oooooO',
     ]
     print(problem_title)
     print('\n'.join(problem))
