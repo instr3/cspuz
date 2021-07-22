@@ -142,22 +142,20 @@ def solve_insight(height, width, problem, problem_title):
                 add_equality_constraint(region_id, region_id, False, self_mappings[False][True])
                 add_equality_constraint(region_id, region_id, False, self_mappings[True][False])
 
-
     is_sat = solver.find_answer()
     return is_sat, region_ids
 
 if __name__ == '__main__':
     start_time = time.time()
-    height = 6
-    width = 10
-    problem_title = [3, 1]
+    height = 5
+    width = 7
+    problem_title = []
     problem = [
-        'o.o.......',
-        'ooo.o...o.',
-        '.oooooo.k.',
-        '.o.ooo..ko',
-        '.ooo.oo...',
-        '..ooo.....'
+        'o.o.o.o',
+        'ooooooo',
+        'oo|oo|o',
+        'ooooooo',
+        '.o.s.o.'
     ]
     print(problem_title)
     print('\n'.join(problem))
