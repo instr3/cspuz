@@ -110,8 +110,9 @@ def solve_insight(height, width, problem, problem_title):
                         segment_pairing = True
                         region_property.append(['SEGMENT'])
 
+
     assert(len(region_property) == n_regions)
-    # print(region_property)
+    print(region_property)
     for region_id in range(n_regions):
         graph.active_vertices_connected(solver, (region_ids == region_id) & is_problem)
         solver.ensure(count_true((region_ids == region_id) & is_problem) > 0)
@@ -193,7 +194,8 @@ def solve_insight(height, width, problem, problem_title):
         if (problem[y][x] == 'O'):
             cond = []
             for region_id in range(n_regions):
-                cond.append((region_ids[y][x] == region_id) & node_degree(x, y, 1, region_id))
+                if (region_property[region_id][0] == 'SEGMENT'):
+                    cond.append((region_ids[y][x] == region_id) & node_degree(x, y, 1, region_id))
             solver.ensure(fold_or(cond))
     is_sat = solver.find_answer()
     return is_sat, region_ids
@@ -201,14 +203,14 @@ def solve_insight(height, width, problem, problem_title):
 if __name__ == '__main__':
     start_time = time.time()
     height = 5
-    width = 6
-    problem_title = [3]
+    width = 7
+    problem_title = []
     problem = [
-        'Oooooo',
-        'oooooo',
-        'oooooo',
-        'oooooo',
-        'oooooO',
+        'Oooooo3',
+        'ooooooo',
+        'ooooooo',
+        'ooooooo',
+        '3oooooO',
     ]
     print(problem_title)
     print('\n'.join(problem))
