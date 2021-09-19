@@ -60,11 +60,26 @@ def generate_slitherlink(height, width, symmetry=False, verbose=False):
 def _main():
     if len(sys.argv) == 1:
         # original example: http://pzv.jp/p.html?slither/4/4/dgdh2c7b
-        height = 3
-        width = 3
-        problem = [[-1, 3, -1],  # noqa: E201
-                   [-1, 3, -1],  # noqa: E201
-                   [-1, -1, -1]]
+        height = 15
+        width = 20
+        problem = [
+            '**2***02*21*12***3**',
+            '2**30***2**3***33**3',
+            '*3***1**1**1**1***3*',
+            '*0***1***30***3***3*',
+            '**32**13****01**31**',
+            '1***2***3**1***2***2',
+            '2***3***3**3***2***0',
+            '*30**10**11**31**23*',
+            '2***3***3**3***1***1',
+            '2***2***1**3***1***2',
+            '**03**13****32**01**',
+            '*3***3***13***3***0*',
+            '*1***3**3**1**3***3*',
+            '3**23***2**2***03**0',
+            '**3***13*22*20***0**',
+        ]
+        problem = [['*0123'.index(c) - 1 for c in line] for line in problem]
         for is_line in solve_slitherlink(height, width, problem):
             print(util.stringify_grid_frame(is_line))
     else:
