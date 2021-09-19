@@ -14,7 +14,9 @@ DIRX = [-1, 0, 1, 0]
 DIRY = [0, -1, 0, 1]
 
 
-def solve_insight(height, width, problem, problem_title):
+def solve_insight(problem, problem_title):
+    height = len(problem)
+    width = len(problem[0])
     # calculate n_regions
     n_regions = 0
     for num in problem_title:
@@ -202,25 +204,23 @@ def solve_insight(height, width, problem, problem_title):
 
 if __name__ == '__main__':
     start_time = time.time()
-    height = 5
-    width = 7
-    problem_title = []
+    problem_title = [2]
     problem = [
-        'Oooooo3',
-        'ooooooo',
-        'ooooooo',
-        'ooooooo',
-        '3oooooO',
+        'o+ooo.ooo|o',
+        '.ooo...ooo.',
+        '.ooo...ooo.',
+        'ooooo.ooooo',
+        'ooooo.ooooo',
     ]
     print(problem_title)
     print('\n'.join(problem))
-    is_sat, answer = solve_insight(height, width, problem, problem_title)
+    is_sat, answer = solve_insight(problem, problem_title)
     end_time = time.time()
     print('solved in', end_time - start_time, 'seconds')
     print('has answer:', is_sat)
     if is_sat:
-        for y in range(height):
-            for x in range(width):
+        for y in range(len(problem)):
+            for x in range(len(problem[0])):
                 if (problem[y][x] == '.'):
                     print('.', end='')
                 else:

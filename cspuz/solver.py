@@ -112,6 +112,14 @@ class Solver(object):
         csp_solver.add_constraint(self.constraints)
         return csp_solver.solve()
 
+    def find_answers(self, max_answers=-1, backend: ModuleType = None):
+        if backend is None:
+            backend = _get_default_backend()
+        csp_solver = backend.CSPSolver(self.variables)  # type: ignore
+        csp_solver.add_constraint(self.constraints)
+        for _ in csp_solver.solve_all(max_answers, self.is_answer_key):
+            yield
+
     def solve(self, backend: ModuleType = None) -> bool:
         if backend is None:
             backend = _get_default_backend()

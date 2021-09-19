@@ -18,11 +18,11 @@ class Config(object):
 
     def __init__(self, infer_from_env=True):
         self.default_backend = _get_default(infer_from_env,
-                                            'CSPUZ_DEFAULT_BACKEND', 'sugar')
+                                            'CSPUZ_DEFAULT_BACKEND', 'sugar_extended')
         self.backend_path = _get_default(infer_from_env, 'CSPUZ_BACKEND_PATH',
-                                         None)
+                                         'D:/Programming/csugar/build/Release/csugar.exe')
         self.use_graph_primitive = strtobool(
-            _get_default(infer_from_env, 'CSPUZ_USE_GRAPH_PRIMITIVE', 'False'))
+            _get_default(infer_from_env, 'CSPUZ_USE_GRAPH_PRIMITIVE', 'true'))
         self.solver_timeout = None
 
 

@@ -21,8 +21,8 @@ def solve_slitherlink(height, width, problem):
                 solver.ensure(
                     count_true(grid_frame.cell_neighbors(y, x)) == problem[y]
                     [x])
-    is_sat = solver.solve()
-    return is_sat, grid_frame
+    for answer in solver.find_answers():
+        yield grid_frame
 
 
 def generate_slitherlink(height, width, symmetry=False, verbose=False):
@@ -60,15 +60,12 @@ def generate_slitherlink(height, width, symmetry=False, verbose=False):
 def _main():
     if len(sys.argv) == 1:
         # original example: http://pzv.jp/p.html?slither/4/4/dgdh2c7b
-        height = 4
-        width = 4
-        problem = [[ 3, -1, -1, -1],  # noqa: E201
-                   [ 3, -1, -1, -1],  # noqa: E201
-                   [-1,  2,  2, -1],  # noqa: E201
-                   [-1,  2, -1,  1]]  # noqa: E201  # yapf: disable
-        is_sat, is_line = solve_slitherlink(height, width, problem)
-        print('has answer:', is_sat)
-        if is_sat:
+        height = 3
+        width = 3
+        problem = [[-1, 3, -1],  # noqa: E201
+                   [-1, 3, -1],  # noqa: E201
+                   [-1, -1, -1]]
+        for is_line in solve_slitherlink(height, width, problem):
             print(util.stringify_grid_frame(is_line))
     else:
         cspuz.config.solver_timeout = 1800.0
